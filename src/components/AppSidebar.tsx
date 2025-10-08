@@ -1,4 +1,4 @@
-import { Home, Map, Users, Bus, ClipboardList, UserCog, Settings } from 'lucide-react';
+import { Home, Map, Users, Bus, ClipboardList, UserCog, UsersRound, Settings } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import {
   Sidebar,
@@ -19,6 +19,7 @@ const menuItems = [
   { title: 'Buses', url: '/buses', icon: Bus },
   { title: 'Manifests', url: '/manifests', icon: ClipboardList },
   { title: 'Assistants', url: '/assistants', icon: UserCog },
+  { title: 'Parents', url: '/parents', icon: UsersRound },
   { title: 'Settings', url: '/settings', icon: Settings },
 ];
 

@@ -21,10 +21,24 @@ export default function Login() {
       return;
     }
 
-    // Mock authentication
-    localStorage.setItem('isAuthenticated', 'true');
-    toast.success(isSignUp ? 'Account created successfully!' : 'Welcome back!');
-    navigate('/dashboard');
+    // Demo login credentials
+    const DEMO_EMAIL = 'demo@schooltrack.com';
+    const DEMO_PASSWORD = 'demo1234';
+
+    if (isSignUp) {
+      localStorage.setItem('isAuthenticated', 'true');
+      toast.success('Account created successfully!');
+      navigate('/dashboard');
+    } else {
+      // Validate demo credentials
+      if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+        localStorage.setItem('isAuthenticated', 'true');
+        toast.success('Welcome to the SchoolTrack Demo!');
+        navigate('/dashboard');
+      } else {
+        toast.error('Invalid credentials. Use: demo@schooltrack.com / demo1234');
+      }
+    }
   };
 
   return (
@@ -36,9 +50,9 @@ export default function Login() {
               <Bus className="h-10 w-10 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">SchoolTrack</CardTitle>
+          <CardTitle className="text-2xl font-bold">🎓 SchoolTrack Transport</CardTitle>
           <CardDescription>
-            {isSignUp ? 'Create your account to get started' : 'Sign in to your account'}
+            {isSignUp ? 'Create your account to get started' : 'Demo: demo@schooltrack.com / demo1234'}
           </CardDescription>
         </CardHeader>
         <CardContent>

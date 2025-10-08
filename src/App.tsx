@@ -10,6 +10,7 @@ import Buses from "./pages/Buses";
 import Tracking from "./pages/Tracking";
 import Manifests from "./pages/Manifests";
 import Assistants from "./pages/Assistants";
+import Parents from "./pages/Parents";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/tracking" element={<Tracking />} />
               <Route path="/manifests" element={<Manifests />} />
               <Route path="/assistants" element={<Assistants />} />
+              <Route path="/parents" element={<Parents />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
           </Route>
