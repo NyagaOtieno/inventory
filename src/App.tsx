@@ -11,6 +11,7 @@ import Tracking from "./pages/Tracking";
 import Manifests from "./pages/Manifests";
 import Assistants from "./pages/Assistants";
 import Parents from "./pages/Parents";
+import ParentPortal from "./pages/ParentPortal";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -27,6 +28,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Login />} />
           <Route element={<ProtectedRoute />}>
+            <Route path="/parent-portal" element={<ParentPortal />} />
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/students" element={<Students />} />

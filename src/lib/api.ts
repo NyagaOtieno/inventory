@@ -34,8 +34,21 @@ export const fetchData = async <T>(endpoint: string, mockData: T): Promise<T> =>
 export const getStudents = () => fetchData('/students', studentsData);
 export const getBuses = () => fetchData('/buses', busesData);
 export const getManifests = () => fetchData('/manifests', manifestsData);
-export const getLiveLocations = () => fetchData('/tracking/live-locations', liveLocationsData);
-export const getAssistants = () => fetchData('/assistants', assistantsData);
-export const getParents = () => fetchData('/parents', parentsData);
+export const getLiveLocations = () => fetchData('/tracking/bus-locations', liveLocationsData);
+export const getAssistants = () => fetchData('/users?role=ASSISTANT', assistantsData);
+export const getParents = () => fetchData('/users?role=PARENT', parentsData);
+
+// Additional API methods for CRUD operations
+export const createStudent = (data: any) => api.post('/students', data);
+export const updateStudent = (id: number, data: any) => api.put(`/students/${id}`, data);
+export const deleteStudent = (id: number) => api.delete(`/students/${id}`);
+
+export const createBus = (data: any) => api.post('/buses', data);
+export const updateBus = (id: number, data: any) => api.put(`/buses/${id}`, data);
+export const deleteBus = (id: number) => api.delete(`/buses/${id}`);
+
+export const createManifest = (data: any) => api.post('/manifests', data);
+export const updateManifest = (id: number, data: any) => api.put(`/manifests/${id}`, data);
+export const deleteManifest = (id: number) => api.delete(`/manifests/${id}`);
 
 export default api;

@@ -6,14 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { login } from '@/lib/auth';
+import { getConfig } from '@/lib/config';
 
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { useMockData } = getConfig();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
@@ -21,23 +24,42 @@ export default function Login() {
       return;
     }
 
-    // Demo login credentials
-    const DEMO_EMAIL = 'demo@schooltrack.com';
-    const DEMO_PASSWORD = 'demo1234';
+    setIsLoading(true);
 
-    if (isSignUp) {
-      localStorage.setItem('isAuthenticated', 'true');
-      toast.success('Account created successfully!');
-      navigate('/dashboard');
-    } else {
-      // Validate demo credentials
-      if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-        localStorage.setItem('isAuthenticated', 'true');
-        toast.success('Welcome to the SchoolTrack Demo!');
-        navigate('/dashboard');
+    try {
+      if (useMockData) {
+        // Mock authentication
+        const DEMO_EMAIL = 'demo@schooltrack.com';
+        const DEMO_PASSWORD = 'demo1234';
+
+        if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+          localStorage.setItem('isAuthenticated', 'true');
+          localStorage.setItem('user', JSON.stringify({ role: 'ADMIN', name: 'Demo User' }));
+          toast.success('Welcome to the SchoolTrack Demo!');
+          navigate('/dashboard');
+        } else {
+          toast.error('Invalid credentials. Use: demo@schooltrack.com / demo1234');
+        }
       } else {
-        toast.error('Invalid credentials. Use: demo@schooltrack.com / demo1234');
+        // Live API authentication
+        const { user } = await login(email, password);
+        localStorage.setItem('isAuthenticated', 'true');
+        
+        toast.success(`Welcome back, ${user.name}!`);
+        
+        // Route based on user role
+        if (user.role === 'PARENT') {
+          navigate('/parent-portal');
+        } else if (user.role === 'ADMIN' || user.role === 'DRIVER' || user.role === 'ASSISTANT') {
+          navigate('/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -52,7 +74,7 @@ export default function Login() {
           </div>
           <CardTitle className="text-2xl font-bold">🎓 SchoolTrack Transport</CardTitle>
           <CardDescription>
-            {isSignUp ? 'Create your account to get started' : 'Demo: demo@schooltrack.com / demo1234'}
+            {useMockData ? 'Demo: demo@schooltrack.com / demo1234' : 'Sign in to your account'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -62,10 +84,11 @@ export default function Login() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@schooltrack.com"
+                placeholder={useMockData ? "demo@schooltrack.com" : "your.email@example.com"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -77,18 +100,11 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full">
-              {isSignUp ? 'Create Account' : 'Sign In'}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={() => setIsSignUp(!isSignUp)}
-            >
-              {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
         </CardContent>
@@ -96,3 +112,4 @@ export default function Login() {
     </div>
   );
 }
+

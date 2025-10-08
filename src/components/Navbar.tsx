@@ -3,12 +3,14 @@ import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { logout, getCurrentUser } from '@/lib/auth';
 
 export function Navbar() {
   const navigate = useNavigate();
+  const currentUser = getCurrentUser();
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
+    logout();
     toast.success('Logged out successfully');
     navigate('/');
   };
@@ -21,6 +23,11 @@ export function Navbar() {
       </div>
       
       <div className="flex items-center gap-2">
+        {currentUser && (
+          <div className="text-sm text-muted-foreground mr-2">
+            {currentUser.name} <span className="text-xs">({currentUser.role})</span>
+          </div>
+        )}
         <Button variant="ghost" size="icon">
           <Bell className="h-5 w-5" />
         </Button>
