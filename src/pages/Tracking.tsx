@@ -47,6 +47,7 @@ export default function Tracking() {
 
       <div className="bg-card rounded-lg border overflow-hidden h-[600px]">
         <MapContainer
+          key={locations.length} // Force re-render when locations change
           center={center as [number, number]}
           zoom={13}
           style={{ height: '100%', width: '100%' }}
