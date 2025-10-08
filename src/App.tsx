@@ -3,8 +3,17 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Students from "./pages/Students";
+import Buses from "./pages/Buses";
+import Tracking from "./pages/Tracking";
+import Manifests from "./pages/Manifests";
+import Assistants from "./pages/Assistants";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { DashboardLayout } from "./components/DashboardLayout";
 
 const queryClient = new QueryClient();
 
@@ -15,8 +24,18 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/" element={<Login />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<DashboardLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/students" element={<Students />} />
+              <Route path="/buses" element={<Buses />} />
+              <Route path="/tracking" element={<Tracking />} />
+              <Route path="/manifests" element={<Manifests />} />
+              <Route path="/assistants" element={<Assistants />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
+          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
