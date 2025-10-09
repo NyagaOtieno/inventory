@@ -73,39 +73,47 @@ export default function ParentPortal() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {myStudents.map((student: any) => {
-            const bus = buses.find((b: any) => b.id === student.busId);
-            return (
-              <Card key={student.id}>
-                <CardHeader>
-                  <CardTitle>{student.name}</CardTitle>
-                  <CardDescription>{student.grade}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Bus className="h-4 w-4 text-primary" />
-                    <span className="text-sm">{bus?.name || 'Not Assigned'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-accent" />
-                    <span className="text-sm">{bus?.route || 'N/A'}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Status</span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        student.status === 'CHECKED_IN'
-                          ? 'bg-success/10 text-success'
-                          : 'bg-warning/10 text-warning'
-                      }`}
-                    >
-                      {student.status}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {myStudents.length === 0 ? (
+            <Card className="col-span-full">
+              <CardContent className="py-8">
+                <p className="text-center text-muted-foreground">No children found</p>
+              </CardContent>
+            </Card>
+          ) : (
+            myStudents.map((student: any) => {
+              const bus = buses.find((b: any) => b.id === student.busId);
+              return (
+                <Card key={student.id}>
+                  <CardHeader>
+                    <CardTitle>{student.name}</CardTitle>
+                    <CardDescription>{student.grade || 'N/A'}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Bus className="h-4 w-4 text-primary" />
+                      <span className="text-sm">{bus?.name || 'Not Assigned'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-accent" />
+                      <span className="text-sm">{bus?.route || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Status</span>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          student.status === 'CHECKED_IN'
+                            ? 'bg-success/10 text-success'
+                            : 'bg-warning/10 text-warning'
+                        }`}
+                      >
+                        {student.status || 'Pending'}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
         </div>
 
         <Card>
@@ -154,36 +162,44 @@ export default function ParentPortal() {
         </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {myBuses.map((bus: any) => (
-            <Card key={bus.id}>
-              <CardHeader>
-                <CardTitle>{bus.name}</CardTitle>
-                <CardDescription>{bus.plateNumber}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Route</span>
-                  <span className="text-sm text-muted-foreground">{bus.route}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Driver</span>
-                  <span className="text-sm text-muted-foreground">{bus.driver}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Status</span>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      bus.status === 'ACTIVE'
-                        ? 'bg-success/10 text-success'
-                        : 'bg-warning/10 text-warning'
-                    }`}
-                  >
-                    {bus.status}
-                  </span>
-                </div>
+          {myBuses.length === 0 ? (
+            <Card className="col-span-full">
+              <CardContent className="py-8">
+                <p className="text-center text-muted-foreground">No bus information available</p>
               </CardContent>
             </Card>
-          ))}
+          ) : (
+            myBuses.map((bus: any) => (
+              <Card key={bus.id}>
+                <CardHeader>
+                  <CardTitle>{bus.name}</CardTitle>
+                  <CardDescription>{bus.plateNumber}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Route</span>
+                    <span className="text-sm text-muted-foreground">{bus.route || 'N/A'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Driver</span>
+                    <span className="text-sm text-muted-foreground">{bus.driver || 'N/A'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Status</span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        bus.status === 'ACTIVE'
+                          ? 'bg-success/10 text-success'
+                          : 'bg-warning/10 text-warning'
+                      }`}
+                    >
+                      {bus.status || 'Unknown'}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
       </main>
     </div>

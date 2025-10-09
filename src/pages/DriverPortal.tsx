@@ -107,17 +107,21 @@ export default function DriverPortal() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {students.slice(0, 5).map((student: any) => (
-                <div key={student.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div>
-                    <p className="font-medium">{student.name}</p>
-                    <p className="text-sm text-muted-foreground">Grade {student.grade}</p>
+              {students.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">No students assigned</p>
+              ) : (
+                students.slice(0, 5).map((student: any) => (
+                  <div key={student.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <div>
+                      <p className="font-medium">{student.name}</p>
+                      <p className="text-sm text-muted-foreground">Grade {student.grade || 'N/A'}</p>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {student.status || 'Pending'}
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {student.status || 'Pending'}
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>

@@ -86,36 +86,40 @@ export default function AssistantPortal() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {students.slice(0, 6).map((student: any) => {
-                const manifest = manifests.find((m: any) => m.studentId === student.id);
-                const status = manifest?.status;
+              {students.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">No students found</p>
+              ) : (
+                students.slice(0, 6).map((student: any) => {
+                  const manifest = manifests.find((m: any) => m.studentId === student.id);
+                  const status = manifest?.status;
 
-                return (
-                  <div key={student.id} className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                    <div className="flex-1">
-                      <p className="font-medium">{student.name}</p>
-                      <p className="text-sm text-muted-foreground">Grade {student.grade}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {status === 'CHECKED_IN' ? (
-                        <Badge variant="default" className="bg-success">Checked In</Badge>
-                      ) : status === 'CHECKED_OUT' ? (
-                        <Badge variant="secondary">Checked Out</Badge>
-                      ) : (
-                        <Badge variant="outline">Pending</Badge>
-                      )}
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          <CheckCircle2 className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <XCircle className="h-4 w-4" />
-                        </Button>
+                  return (
+                    <div key={student.id} className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                      <div className="flex-1">
+                        <p className="font-medium">{student.name}</p>
+                        <p className="text-sm text-muted-foreground">Grade {student.grade || 'N/A'}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {status === 'CHECKED_IN' ? (
+                          <Badge variant="default" className="bg-success">Checked In</Badge>
+                        ) : status === 'CHECKED_OUT' ? (
+                          <Badge variant="secondary">Checked Out</Badge>
+                        ) : (
+                          <Badge variant="outline">Pending</Badge>
+                        )}
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline">
+                            <CheckCircle2 className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </CardContent>
         </Card>
