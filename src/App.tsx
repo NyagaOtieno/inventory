@@ -10,6 +10,7 @@ import Buses from "./pages/Buses";
 import Tracking from "./pages/Tracking";
 import Manifests from "./pages/Manifests";
 import Assistants from "./pages/Assistants";
+import Drivers from "./pages/Drivers";
 import Parents from "./pages/Parents";
 import ParentPortal from "./pages/ParentPortal";
 import DriverPortal from "./pages/DriverPortal";
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/tracking" element={<Tracking />} />
               <Route path="/manifests" element={<Manifests />} />
               <Route path="/assistants" element={<Assistants />} />
+              <Route path="/drivers" element={<Drivers />} />
               <Route path="/parents" element={<Parents />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
