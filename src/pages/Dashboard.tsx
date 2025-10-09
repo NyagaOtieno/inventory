@@ -104,7 +104,9 @@ export default function Dashboard() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium">{bus.plateNumber}</p>
-                    <p className="text-xs text-muted-foreground">{bus.driver}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {typeof bus.driver === 'object' ? bus.driver?.name : bus.driver || 'N/A'}
+                    </p>
                   </div>
                 </div>
               ))}
