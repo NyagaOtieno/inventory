@@ -39,9 +39,8 @@ export default function ParentPortal() {
   const locationsArray = Array.isArray(locations) ? locations : [];
 
   // Filter students for this parent (in real app, filter by parentId)
-  const myStudents = students.filter((student: any) => 
-    student.parent === currentUser?.name || students.slice(0, 2)
-  );
+  // For demo, just show first 2 students
+  const myStudents = students.slice(0, 2);
 
   const myBusIds = myStudents.map((s: any) => s.busId);
   const myBuses = buses.filter((b: any) => myBusIds.includes(b.id));
