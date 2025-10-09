@@ -111,7 +111,7 @@ export default function ParentPortal() {
           <CardContent>
             <div className="h-[500px] rounded-lg overflow-hidden">
               <MapContainer
-                key={locations.length}
+                key="parent-portal-map"
                 center={center as [number, number]}
                 zoom={13}
                 style={{ height: '100%', width: '100%' }}
