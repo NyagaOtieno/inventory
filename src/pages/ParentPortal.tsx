@@ -43,8 +43,13 @@ export default function ParentPortal() {
   const myBusIds = myStudents.map((s: any) => s.busId);
   const myBuses = buses.filter((b: any) => myBusIds.includes(b.id));
 
-  const center = locations.length > 0
-    ? [locations[0].latitude, locations[0].longitude]
+  // Pre-filter locations for my buses only
+  const myBusLocations = locations.filter((loc: any) => 
+    loc.bus && myBusIds.includes(loc.bus.id)
+  );
+
+  const center = myBusLocations.length > 0
+    ? [myBusLocations[0].latitude, myBusLocations[0].longitude]
     : [-1.2921, 36.8219];
 
   return (
@@ -110,19 +115,18 @@ export default function ParentPortal() {
           </CardHeader>
           <CardContent>
             <div className="h-[500px] rounded-lg overflow-hidden">
-              <MapContainer
-                key="parent-portal-map"
-                center={center as [number, number]}
-                zoom={13}
-                style={{ height: '100%', width: '100%' }}
-              >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                {locations
-                  .filter((loc: any) => myBusIds.includes(loc.bus?.id))
-                  .map((location: any) => (
+              {myBusLocations.length > 0 ? (
+                <MapContainer
+                  key="parent-portal-map"
+                  center={center as [number, number]}
+                  zoom={13}
+                  style={{ height: '100%', width: '100%' }}
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  {myBusLocations.map((location: any) => (
                     <Marker
                       key={location.id}
                       position={[location.latitude, location.longitude]}
@@ -139,7 +143,12 @@ export default function ParentPortal() {
                       </Popup>
                     </Marker>
                   ))}
-              </MapContainer>
+                </MapContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center bg-muted">
+                  <p className="text-muted-foreground">No active bus locations available</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
