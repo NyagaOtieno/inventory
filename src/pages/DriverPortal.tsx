@@ -80,6 +80,7 @@ export default function DriverPortal() {
           </CardHeader>
           <CardContent className="h-[400px]">
             <MapContainer
+              key="driver-map"
               center={center as [number, number]}
               zoom={13}
               style={{ height: '100%', width: '100%' }}
