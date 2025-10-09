@@ -12,6 +12,8 @@ import Manifests from "./pages/Manifests";
 import Assistants from "./pages/Assistants";
 import Parents from "./pages/Parents";
 import ParentPortal from "./pages/ParentPortal";
+import DriverPortal from "./pages/DriverPortal";
+import AssistantPortal from "./pages/AssistantPortal";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -29,6 +31,8 @@ const App = () => (
           <Route path="/" element={<Login />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/parent-portal" element={<ParentPortal />} />
+            <Route path="/driver-portal" element={<DriverPortal />} />
+            <Route path="/assistant-portal" element={<AssistantPortal />} />
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/students" element={<Students />} />

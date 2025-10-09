@@ -26,14 +26,15 @@ export default function Parents() {
     queryFn: getStudents,
   });
 
-  const getStudentNames = (studentIds: number[]) => {
+  const getStudentNames = (studentIds: number[] | undefined) => {
+    if (!studentIds || !Array.isArray(studentIds)) return 'N/A';
     return studentIds
       .map((id) => {
         const student = students.find((s: any) => s.id === id);
         return student ? student.name : '';
       })
       .filter(Boolean)
-      .join(', ');
+      .join(', ') || 'N/A';
   };
 
   const filteredParents = parents.filter((parent: any) =>
