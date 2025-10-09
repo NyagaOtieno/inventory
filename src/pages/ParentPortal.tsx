@@ -29,11 +29,14 @@ export default function ParentPortal() {
     queryFn: getBuses,
   });
 
-  const { data: locations = [], refetch } = useQuery({
+  const { data: locations, refetch } = useQuery({
     queryKey: ['liveLocations'],
     queryFn: getLiveLocations,
     refetchInterval: 30000,
   });
+
+  // Ensure locations is always an array
+  const locationsArray = Array.isArray(locations) ? locations : [];
 
   // Filter students for this parent (in real app, filter by parentId)
   const myStudents = students.filter((student: any) => 
@@ -44,7 +47,7 @@ export default function ParentPortal() {
   const myBuses = buses.filter((b: any) => myBusIds.includes(b.id));
 
   // Pre-filter locations for my buses only
-  const myBusLocations = locations.filter((loc: any) => 
+  const myBusLocations = locationsArray.filter((loc: any) => 
     loc.bus && myBusIds.includes(loc.bus.id)
   );
 
