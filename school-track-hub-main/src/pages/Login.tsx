@@ -1,64 +1,80 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
-import axios from 'axios';
-import { Eye, EyeOff } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import axios from "axios";
+import { Eye, EyeOff } from "lucide-react";
 
-// ✅ Backend base URLs
-const API_URL = 'https://schooltransport-production.up.railway.app/api/auth/login';
-const FORGOT_URL = 'https://schooltransport-production.up.railway.app/api/auth/forgot-password';
+// ✅ Backend endpoints
+const API_URL = "https://schooltransport-production.up.railway.app/api/auth/login";
+const FORGOT_URL = "https://schooltransport-production.up.railway.app/api/auth/forgot-password";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotEmail, setForgotEmail] = useState("");
   const [isForgotOpen, setIsForgotOpen] = useState(false);
+
+  // ✅ Redirect if already authenticated
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+    if (token && isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      // 🚀 Make login request
       const response = await axios.post(API_URL, { email, password });
-      const data = response.data;
 
-      if (!data || !data.user || !data.token) {
-        toast.error('Invalid login response from server.');
-        return;
+      const { token, user } = response.data || {};
+
+      if (!token || !user) {
+        throw new Error("Invalid login response from server");
       }
 
-      const { user, token } = data;
+      // ✅ Store securely in localStorage
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("isAuthenticated", "true");
 
-      // ✅ Save token & user to localStorage
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      // ✅ Set axios default header (for all future requests)
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-      toast.success(`Welcome back, ${user.name || 'User'}!`);
+      toast.success(`Welcome back, ${user.name || "User"}!`);
 
-      // ✅ Redirect by role
+      // ✅ Redirect based on role
       switch (user.role) {
-        case 'PARENT':
-          navigate('/parent-portal');
+        case "PARENT":
+          navigate("/parent-portal");
           break;
-        case 'DRIVER':
-          navigate('/driver-portal');
+        case "DRIVER":
+          navigate("/driver-portal");
           break;
-        case 'ASSISTANT':
-          navigate('/assistant-portal');
+        case "ASSISTANT":
+          navigate("/assistant-portal");
           break;
         default:
-          navigate('/dashboard');
+          navigate("/dashboard");
       }
     } catch (error: any) {
-      console.error('Login error:', error);
-      toast.error(error.response?.data?.message || 'Login failed. Check your credentials.');
+      console.error("Login error:", error);
+      // ❌ Clear old tokens on failed login
+      localStorage.removeItem("token");
+      localStorage.removeItem("isAuthenticated");
+      localStorage.removeItem("user");
+      toast.error(error.response?.data?.message || "Login failed. Check your credentials.");
     } finally {
       setIsLoading(false);
     }
@@ -67,15 +83,15 @@ export default function Login() {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotEmail) {
-      toast.error('Please enter your email.');
+      toast.error("Please enter your email.");
       return;
     }
     try {
       await axios.post(FORGOT_URL, { email: forgotEmail });
-      toast.success('Password reset link sent to your email.');
+      toast.success("Password reset link sent to your email.");
       setIsForgotOpen(false);
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to send reset link.');
+      toast.error(error.response?.data?.message || "Failed to send reset link.");
     }
   };
 
@@ -83,9 +99,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            🎓 SchoolTrack Transport
-          </CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">🎓 SchoolTrack Transport</CardTitle>
           <CardDescription className="text-center">
             Enter your credentials to access the system
           </CardDescription>
@@ -114,7 +128,7 @@ export default function Login() {
               </label>
               <Input
                 id="password"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -141,7 +155,7 @@ export default function Login() {
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 

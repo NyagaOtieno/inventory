@@ -1,164 +1,196 @@
-import { useQuery } from '@tanstack/react-query';
-import { Users, Bus, ClipboardList, MapPin } from 'lucide-react';
-import { StatsCard } from '@/components/StatsCard';
-import { getStudents, getBuses, getManifests, getLiveLocations } from '@/lib/api';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useQuery } from "@tanstack/react-query";
+import {
+  getStudents,
+  getBuses,
+  getManifests,
+  getLiveLocations,
+} from "@/lib/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, Bus, Users, MapPin, ClipboardList } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Dashboard() {
+  // Fetch all data using react-query
   const {
-    data: students = [],
+    data: students,
     isLoading: loadingStudents,
-    error: studentsError,
-  } = useQuery({ queryKey: ['students'], queryFn: getStudents });
+    error: errorStudents,
+  } = useQuery({
+    queryKey: ["students"],
+    queryFn: getStudents,
+  });
 
   const {
-    data: buses = [],
+    data: buses,
     isLoading: loadingBuses,
-    error: busesError,
-  } = useQuery({ queryKey: ['buses'], queryFn: getBuses });
+    error: errorBuses,
+  } = useQuery({
+    queryKey: ["buses"],
+    queryFn: getBuses,
+  });
 
   const {
-    data: manifests = [],
+    data: manifests,
     isLoading: loadingManifests,
-    error: manifestsError,
-  } = useQuery({ queryKey: ['manifests'], queryFn: getManifests });
+    error: errorManifests,
+  } = useQuery({
+    queryKey: ["manifests"],
+    queryFn: getManifests,
+  });
 
   const {
-    data: liveLocations = [],
-    isLoading: loadingLocations,
-    error: locationsError,
-  } = useQuery({ queryKey: ['liveLocations'], queryFn: getLiveLocations });
+    data: liveLocations,
+    isLoading: loadingTracking,
+    error: errorTracking,
+  } = useQuery({
+    queryKey: ["liveLocations"],
+    queryFn: getLiveLocations,
+  });
 
-  if (loadingStudents || loadingBuses || loadingManifests || loadingLocations) {
-    return (
-      <div className="p-8 space-y-6">
-        <h2 className="text-2xl font-bold">Loading Dashboard...</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-lg" />
-          ))}
-        </div>
-      </div>
-    );
+  // Show errors as toast
+  if (errorStudents || errorBuses || errorManifests || errorTracking) {
+    toast.error("Failed to load some dashboard data. Please refresh.");
   }
 
-  if (studentsError || busesError || manifestsError || locationsError) {
-    return (
-      <div className="p-8">
-        <h2 className="text-xl font-bold text-red-600">Error Loading Dashboard</h2>
-        <p className="text-muted-foreground">
-          {studentsError?.message || busesError?.message || manifestsError?.message || locationsError?.message}
-        </p>
-      </div>
-    );
-  }
+  const isLoading =
+    loadingStudents || loadingBuses || loadingManifests || loadingTracking;
 
-  const activeBuses = buses.filter((bus: any) => bus.status === 'ACTIVE').length;
-  const tripsToday = manifests.filter((m: any) => {
-    const today = new Date().toDateString();
-    return new Date(m.timestamp).toDateString() === today;
-  }).length;
+  const totalStudents = students?.length || 0;
+  const totalBuses = buses?.length || 0;
+  const totalTrips = manifests?.length || 0;
+  const totalActiveBuses =
+    liveLocations?.filter((loc: any) => loc.status === "ACTIVE").length || 0;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold">Dashboard Overview</h2>
-        <p className="text-muted-foreground mt-1">
-          Welcome back! Here's what's happening today.
-        </p>
-      </div>
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold text-gray-800">
+        🚍 SchoolTrack Dashboard
+      </h1>
+      <p className="text-gray-500">
+        Welcome back! Here’s the current overview of your school transport
+        operations.
+      </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard
-          title="Total Students"
-          value={students.length}
-          icon={Users}
-          trend="+12% from last month"
-          colorClass="text-primary"
-        />
-        <StatsCard
-          title="Active Buses"
-          value={activeBuses}
-          icon={Bus}
-          trend={`${buses.length} total buses`}
-          colorClass="text-accent"
-        />
-        <StatsCard
-          title="Trips Today"
-          value={tripsToday}
-          icon={ClipboardList}
-          colorClass="text-info"
-        />
-        <StatsCard
-          title="Buses on Route"
-          value={liveLocations.length}
-          icon={MapPin}
-          trend="Live tracking active"
-          colorClass="text-success"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <div className="bg-card rounded-lg border p-6">
-          <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
-          <div className="space-y-4">
-            {manifests.slice(0, 5).map((manifest: any) => (
-              <div
-                key={manifest.id}
-                className="flex items-center justify-between py-2 border-b last:border-0"
-              >
-                <div>
-                  <p className="font-medium">
-                    {manifest.student?.name || `Student #${manifest.studentId}`}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {manifest.student?.school?.name
-                      ? manifest.student.school.name
-                      : `Bus #${manifest.busId}`}
-                  </p>
-                </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    manifest.status === 'CHECKED_IN'
-                      ? 'bg-success/10 text-success'
-                      : 'bg-warning/10 text-warning'
-                  }`}
-                >
-                  {manifest.status}
-                </span>
-              </div>
-            ))}
-          </div>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-40">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </div>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Students */}
+          <Card className="shadow-md hover:shadow-lg transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Students
+              </CardTitle>
+              <Users className="w-5 h-5 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{totalStudents}</div>
+              <p className="text-xs text-muted-foreground">
+                Enrolled across all buses
+              </p>
+            </CardContent>
+          </Card>
 
-        {/* Active Routes */}
-        <div className="bg-card rounded-lg border p-6">
-          <h3 className="text-lg font-semibold mb-4">Active Routes</h3>
-          <div className="space-y-4">
-            {buses
-              .filter((bus: any) => bus.status === 'ACTIVE')
-              .map((bus: any) => (
-                <div
-                  key={bus.id}
-                  className="flex items-center justify-between py-2 border-b last:border-0"
-                >
-                  <div>
-                    <p className="font-medium">{bus.name}</p>
-                    <p className="text-sm text-muted-foreground">{bus.route}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">{bus.plateNumber}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {typeof bus.driver === 'object'
-                        ? bus.driver?.name
-                        : bus.driver || 'N/A'}
-                    </p>
-                  </div>
-                </div>
-              ))}
-          </div>
+          {/* Buses */}
+          <Card className="shadow-md hover:shadow-lg transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Buses
+              </CardTitle>
+              <Bus className="w-5 h-5 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{totalBuses}</div>
+              <p className="text-xs text-muted-foreground">
+                Active in your school fleet
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Manifests (Trips) */}
+          <Card className="shadow-md hover:shadow-lg transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Trips
+              </CardTitle>
+              <ClipboardList className="w-5 h-5 text-orange-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{totalTrips}</div>
+              <p className="text-xs text-muted-foreground">
+                Trip manifests recorded
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Live Tracking */}
+          <Card className="shadow-md hover:shadow-lg transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Active Buses
+              </CardTitle>
+              <MapPin className="w-5 h-5 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{totalActiveBuses}</div>
+              <p className="text-xs text-muted-foreground">
+                Buses currently on the move
+              </p>
+            </CardContent>
+          </Card>
         </div>
+      )}
+
+      {/* Optional: Recent Activity */}
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold text-gray-700 mb-2">
+          Recent Trip Activity
+        </h2>
+        {manifests?.length ? (
+          <div className="bg-white rounded-lg shadow p-4 overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-gray-600 border-b">
+                <tr>
+                  <th className="py-2 px-3">Bus</th>
+                  <th className="py-2 px-3">Route</th>
+                  <th className="py-2 px-3">Assistant</th>
+                  <th className="py-2 px-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {manifests.slice(0, 5).map((trip: any, i: number) => (
+                  <tr
+                    key={i}
+                    className="border-b last:border-0 hover:bg-gray-50 transition"
+                  >
+                    <td className="py-2 px-3">{trip.bus?.name || "N/A"}</td>
+                    <td className="py-2 px-3">{trip.route || "N/A"}</td>
+                    <td className="py-2 px-3">
+                      {trip.assistant?.name || "—"}
+                    </td>
+                    <td className="py-2 px-3">
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          trip.status === "COMPLETED"
+                            ? "bg-green-100 text-green-700"
+                            : trip.status === "ONGOING"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {trip.status || "UNKNOWN"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500">No recent trips available.</p>
+        )}
       </div>
     </div>
   );
