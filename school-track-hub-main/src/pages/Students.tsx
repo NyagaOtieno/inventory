@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-import toast, { Toaster } from "react-hot-toast";
+import { useEffect, useState } from "react";
+import { Plus, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -10,301 +10,150 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import axios from "axios";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import toast, { Toaster } from "react-hot-toast";
+import AddStudentForm from "./AddStudentForm"; // ✅ Correct local import
 
-// Modal Component
-const Modal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  children: React.ReactNode;
-  footer?: React.ReactNode;
-}> = ({ isOpen, onClose, title, children, footer }) => {
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-md p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-bold text-lg">{title}</h2>
-          <button onClick={onClose} className="text-gray-500 font-bold">
-            ×
-          </button>
-        </div>
-        <div className="mb-4">{children}</div>
-        {footer && <div className="flex justify-end gap-2">{footer}</div>}
-      </div>
-    </div>
-  );
-};
+const API_BASE = "https://schooltransport-production.up.railway.app/api";
 
-// Axios instance
-const api = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_BASE_URL ||
-    "https://schooltransport-production.up.railway.app/api",
-});
+export default function Students() {
+  const [students, setStudents] = useState<any[]>([]);
+  const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-interface Bus {
-  id: number;
-  name: string;
-  plateNumber: string;
-}
-
-interface Parent {
-  id: number;
-  user?: { name: string; phone: string };
-}
-
-interface School {
-  id: number;
-  name: string;
-}
-
-interface Student {
-  id: number;
-  name: string;
-  grade: string;
-  latitude?: number;
-  longitude?: number;
-  bus?: Bus;
-  parent?: Parent;
-  school?: School;
-}
-
-const Students: React.FC = () => {
-  const queryClient = useQueryClient();
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    grade: "",
-    latitude: "",
-    longitude: "",
-    busId: "",
-    parentId: "",
-    schoolId: "",
-  });
-
-  // FETCH STUDENTS
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["students"],
-    queryFn: async () => {
-      const res = await api.get("/students");
-      return res.data.data as Student[];
-    },
-  });
-
-  // CREATE / UPDATE STUDENT
-  const saveStudent = useMutation({
-    mutationFn: async (student: any) => {
-      if (student.id) {
-        const res = await api.put(`/students/${student.id}`, student);
-        return res.data;
-      } else {
-        const res = await api.post("/students", student);
-        return res.data;
+  // ✅ Fetch all data (students)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/students`);
+        const studentsData = res.data.data || [];
+        setStudents(studentsData);
+        setFilteredStudents(studentsData);
+      } catch (err) {
+        console.error("Error fetching students", err);
+        toast.error("Failed to load students");
+      } finally {
+        setLoading(false);
       }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-      toast.success(
-        `Student ${editingStudent ? "updated" : "added"} successfully`
-      );
-      setModalOpen(false);
-      setEditingStudent(null);
-      setFormData({
-        name: "",
-        grade: "",
-        latitude: "",
-        longitude: "",
-        busId: "",
-        parentId: "",
-        schoolId: "",
-      });
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to save student");
-    },
-  });
+    };
+    fetchData();
+  }, []);
 
-  // DELETE STUDENT
-  const deleteStudent = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await api.delete(`/students/${id}`);
-      return res.data;
-    },
-    onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-      toast.success(`Student with ID ${id} deleted successfully`);
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to delete student");
-    },
-  });
+  // ✅ Search filter
+  useEffect(() => {
+    const lower = searchTerm.toLowerCase();
+    const filtered = students.filter(
+      (s) =>
+        s.name.toLowerCase().includes(lower) ||
+        s.parent?.user?.name?.toLowerCase().includes(lower)
+    );
+    setFilteredStudents(filtered);
+  }, [searchTerm, students]);
 
-  const openModalForEdit = (student: Student) => {
-    setEditingStudent(student);
-    setFormData({
-      name: student.name || "",
-      grade: student.grade || "",
-      latitude: student.latitude?.toString() || "",
-      longitude: student.longitude?.toString() || "",
-      busId: student.bus?.id?.toString() || "",
-      parentId: student.parent?.id?.toString() || "",
-      schoolId: student.school?.id?.toString() || "",
-    });
-    setModalOpen(true);
+  // ✅ Handle refresh after adding student
+  const handleStudentAdded = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/students`);
+      const studentsData = res.data.data || [];
+      setStudents(studentsData);
+      setFilteredStudents(studentsData);
+      setOpen(false);
+    } catch (err) {
+      console.error("Failed to refresh student list", err);
+    }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    saveStudent.mutate({
-      id: editingStudent?.id,
-      name: formData.name,
-      grade: formData.grade,
-      latitude: parseFloat(formData.latitude) || undefined,
-      longitude: parseFloat(formData.longitude) || undefined,
-      busId: formData.busId ? parseInt(formData.busId) : undefined,
-      parentId: formData.parentId ? parseInt(formData.parentId) : undefined,
-      schoolId: formData.schoolId ? parseInt(formData.schoolId) : undefined,
-    });
-  };
-
-  if (isLoading) return <p>Loading...</p>;
-  if (error) return <p>Error loading students</p>;
+  if (loading) return <p className="p-4">Loading data...</p>;
 
   return (
     <div className="p-4">
       <Toaster position="top-right" />
-      <div className="flex justify-between mb-4">
-        <h1 className="text-xl font-bold">Students</h1>
-        <Button
-          onClick={() => {
-            setEditingStudent(null);
-            setModalOpen(true);
-          }}
-        >
-          Add Student
+
+      {/* Header */}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Students</h2>
+        <Button onClick={() => setOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Add Student
         </Button>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Grade</TableHead>
-            <TableHead>Bus Name</TableHead>
-            <TableHead>Bus Plate</TableHead>
-            <TableHead>Parent Name</TableHead>
-            <TableHead>Parent Phone</TableHead>
-            <TableHead>School Name</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data?.map((student) => (
-            <TableRow key={student.id}>
-              <TableCell>{student.name}</TableCell>
-              <TableCell>{student.grade}</TableCell>
-              <TableCell>{student.bus?.name || "-"}</TableCell>
-              <TableCell>{student.bus?.plateNumber || "-"}</TableCell>
-              <TableCell>{student.parent?.user?.name || "-"}</TableCell>
-              <TableCell>{student.parent?.user?.phone || "-"}</TableCell>
-              <TableCell>{student.school?.name || "-"}</TableCell>
-              <TableCell className="flex gap-2">
-                <Button size="sm" onClick={() => openModalForEdit(student)}>
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        "Are you sure you want to delete this student?"
-                      )
-                    ) {
-                      deleteStudent.mutate(student.id);
-                    }
-                  }}
-                >
-                  Delete
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      {/* Search */}
+      <div className="flex items-center gap-2 mb-4">
+        <Search className="text-gray-500" />
+        <Input
+          placeholder="Search by student or parent name..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-sm"
+        />
+      </div>
 
-      <Modal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={editingStudent ? "Edit Student" : "Add Student"}
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit}>
-              {editingStudent ? "Update" : "Save"}
-            </Button>
-          </>
-        }
-      >
-        <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
-          <Input
-            name="name"
-            placeholder="Name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            name="grade"
-            placeholder="Grade"
-            value={formData.grade}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            name="latitude"
-            placeholder="Latitude"
-            value={formData.latitude}
-            onChange={handleChange}
-          />
-          <Input
-            name="longitude"
-            placeholder="Longitude"
-            value={formData.longitude}
-            onChange={handleChange}
-          />
-          <Input
-            name="busId"
-            placeholder="Bus ID"
-            value={formData.busId}
-            onChange={handleChange}
-          />
-          <Input
-            name="parentId"
-            placeholder="Parent ID"
-            value={formData.parentId}
-            onChange={handleChange}
-          />
-          <Input
-            name="schoolId"
-            placeholder="School ID"
-            value={formData.schoolId}
-            onChange={handleChange}
-          />
-        </form>
-      </Modal>
+      {/* Students Table */}
+      <div className="overflow-x-auto border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>#</TableHead>
+              <TableHead>Student Name</TableHead>
+              <TableHead>Grade</TableHead>
+              <TableHead>Parent</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Bus</TableHead>
+              <TableHead>School</TableHead>
+              <TableHead>Location</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredStudents.length > 0 ? (
+              filteredStudents.map((s, i) => (
+                <TableRow key={s.id}>
+                  <TableCell>{i + 1}</TableCell>
+                  <TableCell className="font-medium">{s.name}</TableCell>
+                  <TableCell>{s.grade}</TableCell>
+                  <TableCell>{s.parent?.user?.name || "N/A"}</TableCell>
+                  <TableCell>{s.parent?.user?.phone || "N/A"}</TableCell>
+                  <TableCell>
+                    {s.bus ? `${s.bus.name} (${s.bus.plateNumber})` : "-"}
+                  </TableCell>
+                  <TableCell>{s.school?.name || "-"}</TableCell>
+                  <TableCell>
+                    📍 {s.latitude?.toFixed(4)}, {s.longitude?.toFixed(4)}
+                    <div className="text-xs text-gray-500">
+                      (Approx. Fedha Estate, Nairobi)
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center text-gray-500">
+                  No students found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Add Student Modal */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add New Student</DialogTitle>
+          </DialogHeader>
+
+          {/* ✅ Render AddStudentForm */}
+          <AddStudentForm onSuccess={handleStudentAdded} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
-
-export default Students;
+}
